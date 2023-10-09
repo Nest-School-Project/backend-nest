@@ -38,3 +38,14 @@ class Theme(models.Model):
 
     def __str__(self):
         return self.name+str(self.id)
+
+class Assessment(models.Model):
+    assessmentType=models.CharField(max_length=256)
+    assessmentName=models.CharField(max_length=256)
+    assessmentFor=models.CharField(max_length=10)
+    theme=models.ForeignKey(Theme,on_delete=models.CASCADE,null=True,blank=True)
+    subject=models.ManyToManyField(Subject,null=True,blank=True)
+    grade=models.ForeignKey(Grades,on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.id)+self.assessmentName

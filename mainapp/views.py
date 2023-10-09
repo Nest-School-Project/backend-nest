@@ -130,5 +130,58 @@ class CreateTheme(APIView):
 
         themeInstance=Theme.objects.create(grade=gradeInstance,name=name,centralidea=centralidea,lineofinquiry=lineofinquiry)
         return Response({
-            "message":"Subject created Successfully"
+            "message":"Theme created Successfully"
+        },status=status.HTTP_200_OK)
+
+class CreateAssessment(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def post(self,format=None):
+        data=self.request.data
+        assessmentType=data.get("assessment_type",None)
+        assessmentName=data.get("assessment_name",None)
+        assessmentFor=data.get("assessment_for",None)
+        theme=data.get("theme",None)
+        grade=data.get("grade",None)
+
+        validate_arr=[None,""]
+
+        if assessmentType in validate_arr or assessmentName in validate_arr or assessmentFor in validate_arr or grade in validate_arr:
+            return Response({
+                "message":"Please provide all data"
+            },status=status.HTTP_400_BAD_REQUEST)
+        if assessmentFor=="theme":
+            try:
+                gradeInstance=Grades.objects.get(name=grade)
+            except Grades.DoesNotExist:
+                return Response({
+                    "message":"Grade does not exist"
+                },status=status.HTTP_400_BAD_REQUEST)
+            try:
+                themeInstance=Theme.objects.get(name=theme)
+            except Theme.DoesNotExist:
+                return Response({
+                    "message":"Theme data is not present"
+                },status=status.HTTP_400_BAD_REQUEST)
+
+            assessmentInstance=Assessment.objects.create(assessmentType=assessmentType,assessmentName=assessmentName,assessmentFor=assessmentFor,theme=themeInstance,grade=gradeInstance)
+        else:
+            try:
+                gradeInstance=Grades.objects.get(name=grade)
+            except Grades.DoesNotExist:
+                return Response({
+                    "message":"Grade does not exist"
+                },status=status.HTTP_400_BAD_REQUEST)
+
+            subjects=Subject.objects.filter(grade=gradeInstance)
+            assessmentInstance=Assessment.objects.create(assessmentType=assessmentType,assessmentName=assessmentName,assessmentFor=assessmentFor,grade=gradeInstance)
+            for i in subjects:
+                assessmentInstance.subject.add(i)
+                assessmentInstance.save()
+        assessmentSerializer=AssessmentSerializer(assessmentInstance)        
+        return Response({
+            "message":"Assessment Created Successfully",
+            "data":assessmentSerializer.data
         },status=status.HTTP_200_OK)
