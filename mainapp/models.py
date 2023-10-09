@@ -49,3 +49,14 @@ class Assessment(models.Model):
 
     def __str__(self):
         return str(self.id)+self.assessmentName
+
+class MarkEntry(models.Model):
+
+    assessment=models.ForeignKey(Assessment,on_delete=models.CASCADE)
+    grade=models.ForeignKey(Grades,on_delete=models.CASCADE)
+    student=models.ForeignKey(Student,on_delete=models.CASCADE)
+    theme=models.ForeignKey(Theme,on_delete=models.CASCADE,null=True,blank=True)
+    marks=models.JSONField(null=True,blank=True)
+
+    def __str__(self):
+        return str(self.id)
