@@ -7,4 +7,5 @@ urlpatterns = [
     path("create-subject/",CreateSubject.as_view()),
     path("create-theme/",CreateTheme.as_view()),
     path("create-assessment/",CreateAssessment.as_view()),
+    path("get-students/",GetStudentList.as_view()),
 ]

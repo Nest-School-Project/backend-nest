@@ -185,3 +185,26 @@ class CreateAssessment(APIView):
             "message":"Assessment Created Successfully",
             "data":assessmentSerializer.data
         },status=status.HTTP_200_OK)
+
+class GetStudentList(APIView):
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        grade=self.request.GET.get("grade")
+        section=self.request.GET.get("section")
+
+        valid_arr=[None,""]
+
+        if grade in valid_arr or section in valid_arr:
+            return Response({
+                "message":"Provide proper data"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            students=Student.objects.filter(grade=grade,section=section)
+            studentsSerializer=StudentSerializer(students,many=True)
+
+        return Response({
+            "data":studentsSerializer.data
+        },status=status.HTTP_200_OK)
