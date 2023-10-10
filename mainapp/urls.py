@@ -8,4 +8,5 @@ urlpatterns = [
     path("create-theme/",CreateTheme.as_view()),
     path("create-assessment/",CreateAssessment.as_view()),
     path("get-students/",GetStudentList.as_view()),
+    path("update-marks/",UpdateMarks.as_view())
 ]

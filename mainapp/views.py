@@ -208,3 +208,76 @@ class GetStudentList(APIView):
         return Response({
             "data":studentsSerializer.data
         },status=status.HTTP_200_OK)
+
+
+class UpdateMarks(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def post(self,format=None):
+        data=self.request.data
+        grade=data.get("grade",None)
+        type_assessment=data.get("type",None)
+        assessment_for=data.get("assessment_for",None)
+        try:
+            gradeInstance=Grades.objects.get(name=grade)
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade does not exist"
+            },status=status.HTTP_400_BAD_REQUEST)
+        if assessment_for=="theme":
+            theme=data.get("theme",None)
+            try:
+                themeInstance=Theme.objects.get(id=theme)
+            except Theme.DoesNotExist:
+                return Response({
+                    "message":"Theme does not exists"
+                },status=status.HTTP_200_OK)
+            marks=data.get("marks",None)
+            for i in marks:
+                try:
+                    studentInstance=Student.objects.get(usn=i)
+                except Student.DoesNotExist:
+                    return Response({
+                        "message":"Student does not exists"
+                    },status=status.HTTP_400_BAD_REQUEST)
+                for j in marks[i]:
+                    try:
+                        assessmentInstance=Assessment.objects.get(id=j)
+                    except Assessment.DoesNotExist:
+                        return Response({
+                            "message":"Assessment does not exists"
+                        },status=status.HTTP_400_BAD_REQUEST)
+                    markEntryInstance=MarkEntry.objects.get_or_create(assessment=assessmentInstance,grade=gradeInstance,student=studentInstance,theme=themeInstance)[0]
+                    markEntryInstance.marks=marks[i][j]
+                    markEntryInstance.save()
+        else:
+            subject=data.get("subject",None)
+            try:
+                subjectInstance=Subject.objects.get(id=subject)
+            except Subject.DoesNotExist:
+                return Response({
+                    "message":"subject does not exist"
+                },status=status.HTTP_400_BAD_REQUEST)
+            marks=data.get("marks",None)
+            for i in marks:
+                try:
+                    studentInstance=Student.objects.get(usn=i)
+                except Student.DoesNotExist:
+                    return Response({
+                        "message":"Student does not exists"
+                    },status=status.HTTP_400_BAD_REQUEST)
+                for j in marks[i]:
+                    try:
+                        assessmentInstance=Assessment.objects.get(id=j)
+                    except Assessment.DoesNotExist:
+                        return Response({
+                            "message":"Assessment does not exists"
+                        },status=status.HTTP_400_BAD_REQUEST)
+                    markEntryInstance=MarkEntry.objects.get_or_create(assessment=assessmentInstance,grade=gradeInstance,student=studentInstance,subject=subjectInstance)[0]
+                    markEntryInstance.marks=marks[i][j]
+                    markEntryInstance.save()
+            return Response({
+                "message":"Mark updated Successfully"
+            },status=status.HTTP_200_OK)

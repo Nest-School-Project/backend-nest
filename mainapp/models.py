@@ -56,7 +56,7 @@ class MarkEntry(models.Model):
     grade=models.ForeignKey(Grades,on_delete=models.CASCADE)
     student=models.ForeignKey(Student,on_delete=models.CASCADE)
     theme=models.ForeignKey(Theme,on_delete=models.CASCADE,null=True,blank=True)
-    subject_code=models.ForeignKey(Subject,on_delete=models.CASCADE,null=True,blank=True)
+    subject_code=models.ForeignKey(Subject,on_delete=models.CASCADE,null=True,blank=True) 
     marks=models.JSONField(null=True,blank=True)
 
     def __str__(self):
