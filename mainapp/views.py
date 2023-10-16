@@ -19,7 +19,22 @@ class GetGrades(APIView):
         grades=Grades.objects.all()
         gradesSeralize=GradesSerailizer(grades,many=True)
         return Response(data=gradesSeralize.data,status=status.HTTP_200_OK)
+class GetGradeDetails(APIView):
 
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        grade=self.request.GET.get("grade")
+        try:
+            gradeInstace=Grades.objects.get(name=grade)
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade is not present"
+            },status=status.HTTP_400_BAD_REQUEST)
+        gradesSerialized=GradesSerailizer(gradeInstace)
+        return Response(data=gradesSerialized.data,status=status.HTTP_200_OK)
+    
 class CreateGrades(APIView):
 
     authentication_classes=[]
@@ -140,9 +155,9 @@ class CreateAssessment(APIView):
 
     def post(self,format=None):
         data=self.request.data
-        assessmentType=data.get("assessment_type",None)
+        assessmentType=data.get("assessment_type",None)  ## FA or SA
         assessmentName=data.get("assessment_name",None)
-        assessmentFor=data.get("assessment_for",None)
+        assessmentFor=data.get("assessment_for",None)    ## UOI or subject
         theme=data.get("theme",None)
         grade=data.get("grade",None)
 
@@ -152,7 +167,7 @@ class CreateAssessment(APIView):
             return Response({
                 "message":"Please provide all data"
             },status=status.HTTP_400_BAD_REQUEST)
-        if assessmentFor=="theme":
+        if assessmentFor=="UOI":
             try:
                 gradeInstance=Grades.objects.get(name=grade)
             except Grades.DoesNotExist:
@@ -192,17 +207,17 @@ class GetStudentList(APIView):
 
     def get(self,format=None):
         grade=self.request.GET.get("grade")
-        section=self.request.GET.get("section")
+        
 
         valid_arr=[None,""]
 
-        if grade in valid_arr or section in valid_arr:
+        if grade in valid_arr:
             return Response({
                 "message":"Provide proper data"
             },status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            students=Student.objects.filter(grade=grade,section=section)
+            students=Student.objects.filter(grade=grade)
             studentsSerializer=StudentSerializer(students,many=True)
 
         return Response({
@@ -281,3 +296,48 @@ class UpdateMarks(APIView):
             return Response({
                 "message":"Mark updated Successfully"
             },status=status.HTTP_200_OK)
+
+class GetThemes(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        grade=self.request.GET.get("grade",None)
+        if grade==None:
+            themes=Theme.objects.all()
+            themesSerialized=ThemeSerializer(themes,many=True)
+            return Response(themesSerialized.data,status=status.HTTP_200_OK)
+        else:
+            try:
+                gradeInstance=Grades.objects.get(name=grade)
+            except Grades.DoesNotExist:
+                return Response({
+                    "message":"Invalid data"
+                },status=status.HTTP_400_BAD_REQUEST)
+            theme=Theme.objects.filter(grade=gradeInstance)
+            themesSerialized=ThemeSerializer(theme,many=True)
+            return Response(themesSerialized.data,status=status.HTTP_200_OK)
+
+class GetSubjects(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        grade=self.request.GET.get("grade",None)
+        if grade==None:
+            subjects=Subject.objects.all()
+            subjectserialized=SubjectSerializer(subjects,many=True)
+            return Response(subjectserialized.data,status=status.HTTP_200_OK)
+        else:
+            try:
+                gradeInstance=Grades.objects.get(name=grade)
+            except Grades.DoesNotExist:
+                return Response({
+                    "message":"Invalid data"
+                },status=status.HTTP_400_BAD_REQUEST)
+
+            subjects=Subject.objects.filter(grade=gradeInstance)
+            subjectserialized=SubjectSerializer(subjects,many=True)
+            return Response(subjectserialized.data,status=status.HTTP_200_OK)

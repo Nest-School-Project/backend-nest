@@ -21,3 +21,15 @@ class AssessmentSerializer(ModelSerializer):
         fields="__all__"
         depth=1
 
+class ThemeSerializer(ModelSerializer):
+
+    class Meta:
+        model=Theme
+        fields="__all__"
+        depth=1
+
+class SubjectSerializer(ModelSerializer):
+    class Meta:
+        model=Subject
+        fields="__all__"
+        depth=1
