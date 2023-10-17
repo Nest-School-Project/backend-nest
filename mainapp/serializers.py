@@ -33,3 +33,10 @@ class SubjectSerializer(ModelSerializer):
         model=Subject
         fields="__all__"
         depth=1
+
+class MarkEntrySerializer(ModelSerializer):
+
+    class Meta:
+        model=MarkEntry
+        fields="__all__"
+        depth=1

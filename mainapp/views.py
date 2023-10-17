@@ -341,3 +341,57 @@ class GetSubjects(APIView):
             subjects=Subject.objects.filter(grade=gradeInstance)
             subjectserialized=SubjectSerializer(subjects,many=True)
             return Response(subjectserialized.data,status=status.HTTP_200_OK)
+
+class GetThemeMarks(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        grade=self.request.GET.get("grade",None)
+        section=self.request.GET.get("section",None)
+        theme=self.request.GET.get("theme",None)
+
+        try:
+            gradeInstance=Grades.objects.get(name=grade)
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade does not exists"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            themeInstance=Theme.objects.get(name=theme,grade=gradeInstance)
+        except Theme.DoesNotExist:
+            return Response({
+                "message":"Theme does not exists"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        students=Student.objects.filter(grade=grade,section=section)
+
+        marks_instance=MarkEntry.objects.filter(grade=gradeInstance,theme=themeInstance,student__in=students)
+        markInstanceSerialized=MarkEntrySerializer(marks_instance,many=True)
+
+        return Response(markInstanceSerialized.data,status=status.HTTP_200_OK)
+
+class GetAssessmentList(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        grade=self.request.GET.get("grade",None)
+        assessment_type=self.request.GET.get("type",None)
+        try:
+            gradeInstance=Grades.objects.get(name=grade)
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Invalid data"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        if assessment_type==None:
+            assessments=Assessment.objects.filter(grade=gradeInstance)
+        else:
+            assessments=Assessment.objects.filter(grade=gradeInstance,assessmentType=assessment_type)
+        
+        assessmentSerialized=AssessmentSerializer(assessments,many=True)
+        return Response(assessmentSerialized.data,status=status.HTTP_200_OK)

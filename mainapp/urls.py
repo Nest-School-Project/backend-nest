@@ -12,4 +12,6 @@ urlpatterns = [
     path("get-grade/",GetGradeDetails.as_view()),
     path("get-themes/",GetThemes.as_view()),
     path("get-subjects/",GetSubjects.as_view()),
+    path("get-theme-marks/",GetThemeMarks.as_view()),
+    path("get-assessments/",GetAssessmentList.as_view()),
 ]
