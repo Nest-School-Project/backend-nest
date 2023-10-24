@@ -395,3 +395,238 @@ class GetAssessmentList(APIView):
         
         assessmentSerialized=AssessmentSerializer(assessments,many=True)
         return Response(assessmentSerialized.data,status=status.HTTP_200_OK)
+
+class UpdateThemeMarks(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def post(self,format=None):
+        data=self.request.data.get("data","df")
+        
+        try:
+            grade_instance=Grades.objects.get(name=data['class_name'])        
+
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade does not exist"
+            },status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            theme_instance=Theme.objects.get(name=data['theme_name'],grade=grade_instance)
+        except Theme.DoesNotExist:
+            return Response(
+                {
+                "message":"Invalid theme"},
+                status=status.HTTP_400_BAD_REQUEST
+                )
+
+        
+        
+        for i in data['students']:
+            try:
+                student_instance=Student.objects.get(usn=i['usn'])
+            except Student.DoesNotExist:
+                continue
+
+            for j in data['marks'][i['usn']]["FA"]:
+                try:
+                    assessment_instance=Assessment.objects.get(assessmentName=j,theme=theme_instance,grade=grade_instance,assessmentFor="UOI",assessmentType="FA")
+                except Assessment.DoesNotExist:
+                    return Response(
+                        {
+                            "message":"Does not exist"
+                        },status=status.HTTP_400_BAD_REQUEST
+                    )
+                marksInstance=MarkEntry.objects.get_or_create(assessment=assessment_instance,grade=grade_instance,student=student_instance,theme=theme_instance)[0]
+                marksInstance.marks=data['marks'][i['usn']]["FA"][j]
+                marksInstance.save()
+            for j in data['marks'][i['usn']]["SA"]:
+                try:
+                    assessment_instance=Assessment.objects.get(assessmentName=j,theme=theme_instance,grade=grade_instance,assessmentFor="UOI",assessmentType="SA")
+                except Assessment.DoesNotExist:
+                    return Response(
+                        {
+                            "message":"Does not exist"
+                        },status=status.HTTP_400_BAD_REQUEST
+                    )
+                marksInstance=MarkEntry.objects.get_or_create(assessment=assessment_instance,grade=grade_instance,student=student_instance,theme=theme_instance)[0]
+                marksInstance.marks=data['marks'][i['usn']]["SA"][j]
+                marksInstance.save()
+        
+        return Response({
+            "message":"Updated Successfully"
+        },status=status.HTTP_200_OK)
+
+
+class GetSubjectMarks(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        grade=self.request.GET.get("grade",None)
+        subject=self.request.GET.get("subject",None)
+        section=self.request.GET.get("section",None)
+        try:
+            gradeInstance=Grades.objects.get(name=grade)
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade does not exists"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            subjectInstance=Subject.objects.get(name=subject,grade=gradeInstance)
+        except Subject.DoesNotExist:
+            return Response({
+                "message":"Subject does not exists"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        students=Student.objects.filter(grade=grade,section=section)
+
+        marks_instance=MarkEntry.objects.filter(grade=gradeInstance,subject_code=subjectInstance,student__in=students)
+        markInstanceSerialized=MarkEntrySerializer(marks_instance,many=True)
+
+        return Response(markInstanceSerialized.data,status=status.HTTP_200_OK)
+
+class UpdateSubjectMarks(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def post(self,format=None):
+        data=self.request.data.get("data","df")
+        try:
+            grade_instance=Grades.objects.get(name=data['class_name'])        
+
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade does not exist"
+            },status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            subject_instance=Subject.objects.get(name=data['subject_name'],grade=grade_instance)
+        except Subject.DoesNotExist:
+            return Response(
+                {
+                "message":"Invalid theme"},
+                status=status.HTTP_400_BAD_REQUEST
+                )
+
+        
+        
+        for i in data['students']:
+            try:
+                student_instance=Student.objects.get(usn=i['usn'])
+            except Student.DoesNotExist:
+                continue
+
+            for j in data['marks'][i['usn']]["FA"]:
+                try:
+                    assessment_instance=Assessment.objects.get(assessmentName=j,grade=grade_instance,assessmentFor="subject",assessmentType="FA")
+                except Assessment.DoesNotExist:
+                    return Response(
+                        {
+                            "message":"Does not exist"
+                        },status=status.HTTP_400_BAD_REQUEST
+                    )
+                marksInstance=MarkEntry.objects.get_or_create(assessment=assessment_instance,grade=grade_instance,student=student_instance,subject_code=subject_instance)[0]
+                marksInstance.marks=data['marks'][i['usn']]["FA"][j]
+                marksInstance.save()
+            for j in data['marks'][i['usn']]["SA"]:
+                try:
+                    assessment_instance=Assessment.objects.get(assessmentName=j,grade=grade_instance,assessmentFor="subject",assessmentType="SA")
+                except Assessment.DoesNotExist:
+                    return Response(
+                        {
+                            "message":"Does not exist"
+                        },status=status.HTTP_400_BAD_REQUEST
+                    )
+                marksInstance=MarkEntry.objects.get_or_create(assessment=assessment_instance,grade=grade_instance,student=student_instance,subject_code=subject_instance)[0]
+                marksInstance.marks=data['marks'][i['usn']]["SA"][j]
+                marksInstance.save()
+        
+        return Response({
+            "message":"Updated Successfully"
+        },status=status.HTTP_200_OK)
+    
+class GetIndividualFaAnalysis(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        usn=self.request.GET.get("usn",None)
+        try:
+            student_instance=Student.objects.get(usn=usn)
+        except Student.DoesNotExist:
+            return Response({
+                "message":"Students does not exists"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            grade_instance=Grades.objects.get(name=student_instance.grade)
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade does not exist"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        themes=Theme.objects.filter(grade=grade_instance)
+        subjects=Subject.objects.filter(grade=grade_instance)
+        response_json={
+            "student_name":student_instance.name,
+            "student_usn":student_instance.usn,
+            "student_grade":student_instance.grade,
+            "student_section":student_instance.section,
+            "themes":[],
+            "subjects":[],
+        }
+        for i in themes:
+            marks=[]
+            assessments=Assessment.objects.filter(assessmentType="FA",assessmentFor="UOI",theme=i,grade=grade_instance)
+            for j in assessments:
+                try:
+                    marks_instance=MarkEntry.objects.get(assessment=j,grade=grade_instance,theme=i,student=student_instance)
+                except:
+                    marks.append({
+                        "name":j.assessmentName,
+                        "mark":{
+                            "c1":0,
+                            "c2":0,
+                        }
+                    })
+                    continue
+                marks.append({
+                    "name":j.assessmentName,
+                    "mark":marks_instance.marks
+                })
+            response_json["themes"].append({
+                "name":i.name,
+                "marks":marks
+            })
+        for i in subjects:
+            marks=[]
+            assessments=Assessment.objects.filter(assessmentType="FA",assessmentFor="subject",grade=grade_instance)
+            for j in assessments:
+                try:
+                    marks_instance=MarkEntry.objects.get(assessment=j,grade=grade_instance,subject_code=i,student=student_instance)
+                except MarkEntry.DoesNotExist:
+                    marks.append({
+                        "name":j.assessmentName,
+                        "mark":{
+                            "c1":0,
+                            "c2":0
+                        }
+                    })
+                    continue
+
+                marks.append({
+                    "name":j.assessmentName,
+                    "mark":marks_instance.marks
+                })
+            response_json["subjects"].append({
+                "name":i.name,
+                "marks":marks
+            })
+
+        return Response(response_json,status=status.HTTP_200_OK)

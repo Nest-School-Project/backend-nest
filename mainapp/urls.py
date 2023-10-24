@@ -14,4 +14,8 @@ urlpatterns = [
     path("get-subjects/",GetSubjects.as_view()),
     path("get-theme-marks/",GetThemeMarks.as_view()),
     path("get-assessments/",GetAssessmentList.as_view()),
+    path("update-theme-marks/",UpdateThemeMarks.as_view()),
+    path("get-subject-marks/",GetSubjectMarks.as_view()),
+    path("update-subject-marks/",UpdateSubjectMarks.as_view()),
+    path("get-indiv-fa-analysis",GetIndividualFaAnalysis.as_view()),
 ]
