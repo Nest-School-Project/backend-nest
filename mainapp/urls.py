@@ -17,5 +17,10 @@ urlpatterns = [
     path("update-theme-marks/",UpdateThemeMarks.as_view()),
     path("get-subject-marks/",GetSubjectMarks.as_view()),
     path("update-subject-marks/",UpdateSubjectMarks.as_view()),
-    path("get-indiv-fa-analysis",GetIndividualFaAnalysis.as_view()),
+    path("get-indiv-fa-analysis/",GetIndividualFaAnalysis.as_view()),
+    path("get-indiv-sa-analysis/",GetIndividualSaAnalysis.as_view()),
+    path("get-ostu-fa/",GetOstuFA.as_view()),
+    path("get-ostu-sa/",GetOstuSA.as_view()),
+    path("get-UOI-fa/",GetOUOI.as_view()),
+    path("get-UOI-sa/",GetUOISa.as_view())
 ]

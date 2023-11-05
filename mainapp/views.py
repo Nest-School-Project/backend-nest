@@ -591,8 +591,8 @@ class GetIndividualFaAnalysis(APIView):
                     marks.append({
                         "name":j.assessmentName,
                         "mark":{
-                            "c1":0,
-                            "c2":0,
+                            "c1":"NA",
+                            "c2":"NA",
                         }
                     })
                     continue
@@ -614,8 +614,8 @@ class GetIndividualFaAnalysis(APIView):
                     marks.append({
                         "name":j.assessmentName,
                         "mark":{
-                            "c1":0,
-                            "c2":0
+                            "c1":"NA",
+                            "c2":"NA",
                         }
                     })
                     continue
@@ -629,4 +629,352 @@ class GetIndividualFaAnalysis(APIView):
                 "marks":marks
             })
 
+        return Response(response_json,status=status.HTTP_200_OK)
+
+class GetIndividualSaAnalysis(APIView):
+
+
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        usn=self.request.GET.get("usn",None)
+        try:
+            student_instance=Student.objects.get(usn=usn)
+        except Student.DoesNotExist:
+            return Response({
+                "message":"Students does not exists"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            grade_instance=Grades.objects.get(name=student_instance.grade)
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade does not exist"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        themes=Theme.objects.filter(grade=grade_instance)
+        subjects=Subject.objects.filter(grade=grade_instance)
+
+        response_json={
+            "student_name":student_instance.name,
+            "student_usn":student_instance.usn,
+            "student_grade":student_instance.grade,
+            "student_section":student_instance.section,
+            "themes":[],
+            "subjects":[],
+        }
+
+        for i in themes:
+            marks=[]
+            assessment=Assessment.objects.filter(assessmentType="SA",assessmentFor="UOI",theme=i,grade=grade_instance)
+            for j in assessment:
+                try:
+                    marks_instance=MarkEntry.objects.get(assessment=j,grade=grade_instance,theme=i,student=student_instance)
+                except:
+                    marks.append({
+                        "name":j.assessmentName,
+                        "mark":{
+                            "c1":"NA",
+                            "c2":"NA",
+                            "c3":"NA",
+                            "c4":"NA",
+                            "c5":"NA",
+                        }
+                    })
+                    continue
+                marks.append({
+                    "name":j.assessmentName,
+                    "mark":marks_instance.marks
+                })
+            response_json["themes"].append({
+                "name":i.name,
+                "marks":marks
+            })
+        for i in subjects:
+            marks=[]
+            assessments=Assessment.objects.filter(assessmentType="SA",assessmentFor="subject",grade=grade_instance)
+            for j in assessments:
+                try:
+                    marks_instance=MarkEntry.objects.get(assessment=j,grade=grade_instance,subject_code=i,student=student_instance)
+                except MarkEntry.DoesNotExist:
+                    marks.append({
+                        "name":j.assessmentName,
+                        "mark":{
+                            "c1":"NA",
+                            "c2":"NA",
+                            "c3":"NA",
+                            "c4":"NA",
+                            "c5":"NA",
+                        }
+                    })
+                    continue
+                marks.append({
+                    "name":j.assessmentName,
+                    "mark":marks_instance.marks
+                })
+            response_json["subjects"].append({
+                "name":i.name,
+                "marks":marks
+            })
+        return Response(response_json,status=status.HTTP_200_OK)
+
+class GetOstuFA(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        grade=self.request.GET.get("grade",None)
+        try:
+            grade_instance=Grades.objects.get(name=grade)
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade does not exists"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        assessments=Assessment.objects.filter(grade=grade_instance,assessmentType="FA",assessmentFor="subject")
+        subjects=Subject.objects.filter(grade=grade_instance)
+        students=Student.objects.filter(grade=grade)
+        response_json={}
+        response_json["assessment_list"]=[ass.assessmentName for ass in assessments]
+        response_json["subject_list"]=[sub.name for sub in subjects]
+        response_json["assessments"]={}
+        response_json["student_list"]=[stud.name for stud in students]
+        
+        for i in assessments:
+            
+            response_json["assessments"][i.assessmentName]=[]
+                
+            
+            for j in subjects:
+                subject_data={
+                    "name":j.name,
+                    "students":[]
+                }
+                for k in students:
+                    try:
+                        mark_entry_instance=MarkEntry.objects.get(student=k,grade=grade_instance,assessment=i,subject_code=j)
+                        subject_data["students"].append({
+                            "name":k.name,
+                            "c1":mark_entry_instance.marks["c1"],
+                            "c2":mark_entry_instance.marks["c2"]
+                        })
+                    except MarkEntry.DoesNotExist:
+                        subject_data["students"].append({
+                            "name":k.name,
+                            "c1":"NA",
+                            "c2":"NA"
+                        })
+                response_json["assessments"][i.assessmentName].append(subject_data)
+            
+        return Response(response_json,status=status.HTTP_200_OK)
+            
+
+class GetOstuSA(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        grade=self.request.GET.get("grade",None)
+        try:
+            grade_instance=Grades.objects.get(name=grade)
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade does not exists"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        assessments=Assessment.objects.filter(grade=grade_instance,assessmentType="SA",assessmentFor="subject")
+        subjects=Subject.objects.filter(grade=grade_instance)
+        students=Student.objects.filter(grade=grade)
+        response_json={}
+        response_json["assessment_list"]=[ass.assessmentName for ass in assessments]
+        response_json["subject_list"]=[sub.name for sub in subjects]
+        response_json["assessments"]={}
+        response_json["student_list"]=[stud.name for stud in students]
+        
+        for i in assessments:
+            
+            response_json["assessments"][i.assessmentName]=[]
+                
+            
+            for j in subjects:
+                subject_data={
+                    "name":j.name,
+                    "students":[]
+                }
+                for k in students:
+                    try:
+                        mark_entry_instance=MarkEntry.objects.get(student=k,grade=grade_instance,assessment=i,subject_code=j)
+                        subject_data["students"].append({
+                            "name":k.name,
+                            "c1":mark_entry_instance.marks["c1"],
+                            "c2":mark_entry_instance.marks["c2"],
+                            "c3":mark_entry_instance.marks["c3"],
+                            "c4":mark_entry_instance.marks["c4"],
+                            "c5":mark_entry_instance.marks["c5"],
+                            
+                        })
+                    except MarkEntry.DoesNotExist:
+                        subject_data["students"].append({
+                            "name":k.name,
+                            "c1":"NA",
+                            "c2":"NA",
+                            "c3":"NA",
+                            "c4":"NA",
+                            "c5":"NA"
+                        })
+                response_json["assessments"][i.assessmentName].append(subject_data)
+            
+        return Response(response_json,status=status.HTTP_200_OK)
+
+class GetOUOI(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        grade=self.request.GET.get("grade",None)
+        try:
+            grade_instance=Grades.objects.get(name=grade)
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade does not exists"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        assessments=Assessment.objects.filter(grade=grade_instance,assessmentType="FA",assessmentFor="UOI")
+        themes=Theme.objects.filter(grade=grade_instance)
+        students=Student.objects.filter(grade=grade)
+        response_json={}
+        response_json["assessment_list"]=[ass.assessmentName for ass in assessments]
+        response_json["theme_list"]=[sub.name for sub in themes]
+        response_json["assessments"]=[]
+        response_json["student_list"]=[stud.name for stud in students]
+
+        """
+        response_json["assessments"].append({
+                "name":i.name,
+                "marks":[
+                    {
+                        "name":"FA1",
+                        "students":[
+                            {
+                                "name":"Aravind",
+                                "c1":0,
+                                "c2":6
+                            }
+                        ]
+                    }
+                ]
+            })
+            
+        """
+        for i in themes:
+            theme_object={
+                "name":i.name,
+                "marks":[]
+            }
+            assessments=Assessment.objects.filter(grade=grade_instance,assessmentType="FA",assessmentFor="UOI",theme=i)
+
+            for j in assessments:
+                ass_object={
+                    "name":j.assessmentName,
+                    "students":[]
+                }
+                for k in students:
+                    try:
+                        mark_entry_instance=MarkEntry.objects.get(student=k,grade=grade_instance,assessment=j,theme=i)
+                        ass_object["students"].append({
+                            "name":k.name,
+                            "c1":mark_entry_instance.marks["c1"],
+                            "c2":mark_entry_instance.marks["c2"]
+                        })
+                    except MarkEntry.DoesNotExist:
+                        ass_object["students"].append({
+                            "name":k.name,
+                            "c1":"NA",
+                            "c2":"NA"
+                        })
+                theme_object["marks"].append(ass_object)
+            response_json["assessments"].append(theme_object)
+        return Response(response_json,status=status.HTTP_200_OK)
+
+class GetUOISa(APIView):
+
+    authentication_classes=[]
+    permission_classes=[]
+
+    def get(self,format=None):
+        grade=self.request.GET.get("grade",None)
+        try:
+            grade_instance=Grades.objects.get(name=grade)
+        except Grades.DoesNotExist:
+            return Response({
+                "message":"Grade does not exists"
+            },status=status.HTTP_400_BAD_REQUEST)
+
+        assessments=Assessment.objects.filter(grade=grade_instance,assessmentType="SA",assessmentFor="UOI")
+        themes=Theme.objects.filter(grade=grade_instance)
+        students=Student.objects.filter(grade=grade)
+        response_json={}
+        response_json["assessment_list"]=[ass.assessmentName for ass in assessments]
+        response_json["theme_list"]=[sub.name for sub in themes]
+        response_json["assessments"]=[]
+        response_json["student_list"]=[stud.name for stud in students]
+
+        """
+        response_json["assessments"].append({
+                "name":i.name,
+                "marks":[
+                    {
+                        "name":"FA1",
+                        "students":[
+                            {
+                                "name":"Aravind",
+                                "c1":0,
+                                "c2":6
+                            }
+                        ]
+                    }
+                ]
+            })
+            
+        """
+        for i in themes:
+            theme_object={
+                "name":i.name,
+                "marks":[]
+            }
+            assessments=Assessment.objects.filter(grade=grade_instance,assessmentType="SA",assessmentFor="UOI",theme=i)
+
+            for j in assessments:
+                ass_object={
+                    "name":j.assessmentName,
+                    "students":[]
+                }
+                for k in students:
+                    try:
+                        mark_entry_instance=MarkEntry.objects.get(student=k,grade=grade_instance,assessment=j,theme=i)
+                        ass_object["students"].append({
+                            "name":k.name,
+                            "c1":mark_entry_instance.marks["c1"],
+                            "c2":mark_entry_instance.marks["c2"],
+                            "c3":mark_entry_instance.marks["c3"],
+                            "c4":mark_entry_instance.marks["c4"],
+                            "c5":mark_entry_instance.marks["c5"]
+                            
+                        })
+                    except MarkEntry.DoesNotExist:
+                        ass_object["students"].append({
+                            "name":k.name,
+                            "c1":"NA",
+                            "c2":"NA",
+                            "c3":"NA",
+                            "c4":"NA",
+                            "c5":"NA"
+                        })
+                theme_object["marks"].append(ass_object)
+            response_json["assessments"].append(theme_object)
         return Response(response_json,status=status.HTTP_200_OK)
